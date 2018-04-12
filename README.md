@@ -1,36 +1,35 @@
 # Graduation Project
 ***
+## 1 introduction
+
 > the data come from [REDD site]
+>
+> use svm to make a Classifier which can Classify a device's on/off from the total circuit of home
+>
+> only show low frequenncy power data due to I only use it
 
-[REDD site]:http://redd.csail.mit.edu
 
-use svm to make a Classifier which can Classify a device's on/off from the total circuit of home
-
-
+### 1.1 Low Frequency Power Data
 
 ```
-readme.txt
+The low_freq/ directory contains average power readings for both the
+two power mains and the individual circuits of the house (eventually,
+this will also contain plug loads for houses with individual plug
+monitors).  The data is logged at a frequency of about once a second
+for a mains and once every three seconds for the circuits.  The
+directory is organized as follows:
 
-----------
-低频功率数据
-----------
-low_freq/
-目录包含各电源线和房子的电路的平均功率读数（这也包含具有单独插头的房屋的插头负载显示器）。
-房子的数据以大约每秒一次的频率记录
-电路每三秒钟一次
+redd/low_freq/
+  house_{1..n}/          -- directories for each house
+    labels.dat           -- device category labels for every channel
+    channel_{1..k}.dat   -- time/wattage readings for each channel
 
-文件目录组织如下：
-
-REDD / low_freq /
-  house_ {1..n} / - 每个房子的目录
-    labels.dat - 每个通道的设备类别标签
-    channel_ {1..k} .dat - 每个通道的时间/瓦特数读数
-
-主目录由几个house_i目录组成
-每个目录都是单个房屋的所有功率读数
-每个房子子目录由一个labels.dat和几个channels_i.dat组成
-标签文件包含线路号和文本标签指示此通道上设备的类别
-例：
+The main directory consists of several house_i directories, each of
+which contain all the power readings for a single house.  Each house
+subdirectory consists of a labels.dat and several channels_i.dat
+files.  The labels file contains channel numbers and a text label
+indicating the general category of device on this channel, for
+example:
 
 1 mains_1
 2 mains_2
@@ -38,10 +37,14 @@ REDD / low_freq /
 4 lighting
 ...
 
-在电路上有多个设备类型的情况下，最好按电路的主要类型分类。
+In cases where the circuit has different device types on it (for
+example, circuits that power multiple outlets), we have attempted to
+best categorize the main type of appliance on the circuit.
 
-每个channel_i.dat文件：
-UTC时间戳（作为整数） 功率读数（记录电路的视在功率）
+Each channel_i.dat file contains UTC timestamps (as integers) and
+power readings (recording the apparent power of the circuit) for
+the channel:
+
 ...
 1306541834      102.964
 1306541835      103.125
@@ -51,3 +54,13 @@ UTC时间戳（作为整数） 功率读数（记录电路的视在功率）
 1306541839      102.589
 ...
 ```
+
+## 2 sulotion
+
+select the mutated data of power from house_'i'/channel_'j'.dat as the train data of label_i,\
+but the data should be >= MINI_INTERVAL or <= -MINI_INTERVAL(now(2018-4-12) set it as 1) 
+
+> We can to set MNIN_INTERVAL as a variable depend on the value of power. but now take a easy way
+
+
+[REDD site]:http://redd.csail.mit.edu
