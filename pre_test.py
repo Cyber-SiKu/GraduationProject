@@ -1,7 +1,8 @@
 '''
-TODO:  2.  test the accuracy of classify based on svm \
+TODO:   1.  read data from one channel      ----- ok
+TODO:   2.  test the accuracy of classify based on svm \
             90% to train svm, 10% to test
-            at first use 10 to train for quickly
+            at first use 10 to train for quickly ----ok
 '''
 from numpy import mat, shape
 
@@ -51,49 +52,48 @@ def test_digits():
     '''
     test the accuracy of classify based on svm
             90% to train svm, 10% to test
-            Todo : change rate 10%-10% -----> 90%-90%
+            Todo : change rate 10%-10% -----> 90%-90% ---ok
     :return: the test error rate
     '''
     from numpy import ravel, vstack, hstack, array
     from sklearn.svm import SVC
     from sklearn.externals import joblib
     dev_numders = 20    # the number of devices
-    train_rate = 0.01
-    # TODO: train_rate should be
-    # train_rate = 0.9 #  rate to train
-    data, label = load_dev_data(1, 8)
+    # train_rate = 0.01
+    # TODO: train_rate should be    ----ok
+    train_rate = 0.9 #  rate to train
+    data, label = load_dev_data(1, 3)
     lenth = shape(data)[0]
     train_data = data[0:int(lenth * train_rate)]
     train_label = label[:, 0:int(lenth * train_rate)]
     # follw two lines just test for quickly
-    test_data = data[int(lenth * train_rate): int(2 * lenth * train_rate)]
-    test_label = label[:, int(lenth * train_rate): int(2 * lenth * train_rate)]
-    # TODO: the test data should be
-    # test_data = vstack((test_data, data[int(lenth*train_rate): lenth]))
-    # test_label = hstack(test_label, label[int(lenth*train_rate): lenth])
-    for i in range(8, 10): # test channel 9, 10
-    # TODO: for should be
-    # for i in range(2, dev_numders):  # train svm with the train_rata of data
+    # test_data = data[int(lenth * train_rate): int(2 * lenth * train_rate)]
+    # test_label = label[:, int(lenth * train_rate): int(2 * lenth * train_rate)]
+    # TODO: the test data should be  ----ok
+    test_data = data[int(lenth*train_rate):lenth]
+    test_label = label[:, int(lenth*train_rate):lenth]
+    #for i in range(8, 10): # test channel 9, 10
+    # TODO: for should be   ----ok
+    for i in range(3, dev_numders):  # train svm with the train_rata of data
         data, label = load_dev_data(1, i+1)  # tips： i start  at 0 so +1
         lenth = shape(data)[0]
         train_data = vstack((train_data, data[0: int(lenth*train_rate)]))
         train_label = hstack((train_label[0], label[:, 0: int(lenth*train_rate)]))
         # follw two lines just test for quickly
-        test_data = vstack((test_data, \
-                            data[int(lenth*train_rate): int(2*lenth*train_rate)]))
-        test_label = hstack((test_label, \
-                            label[:, int(lenth * train_rate): int(2*lenth*train_rate)]))
-        # TODO: the test data should be
-        # test_data = vstack((test_data, data[int(lenth*train_rate): lenth]))
-        # test_label = hstack(test_label, label[int(lenth*train_rate): lenth])
+        # test_data = vstack((test_data, \
+        #                     data[int(lenth*train_rate): int(2*lenth*train_rate)]))
+        # test_label = hstack((test_label, \
+        #                     label[:, int(lenth * train_rate): int(2*lenth*train_rate)]))
+        # TODO: the test data should be ----ok
+        test_data = vstack((test_data, data[int(lenth*train_rate): lenth]))
+        test_label = hstack((test_label, label[:, int(lenth*train_rate): lenth]))
     clf = SVC()
     clf.fit(train_data, ravel(train_label))  # train svm
     # TODO: save the train_model
-    # joblib.dump(clf, 'train_model.pkl')
+    joblib.dump(clf, 'train_model_no_MINI.pkl')
     # test
     error_count = 0
     for i in range(shape(test_data)[0]):
         if abs(clf.predict(test_data[i])[0] - array(test_label)[0][i]) < 0.00001:
             error_count+=1
-    print("error: %f" % (float(error_count)/float(lenth)))
-
+    print("the training error rate is: %f" % (float(error_count)/float(lenth)))
