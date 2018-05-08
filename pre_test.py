@@ -37,63 +37,56 @@ def load_dev_data(house_num=1, dev_num=9):
     :return data_mat:  the compliant data
     :return label_mat: data_mat'label
     '''
-    from numpy import ones
+    from numpy import ones, array
     # MINI_INTERVAL = 1 #  TODO: use the number to filter data
     file_path = "house_%d/channel_%d.dat" % (house_num, dev_num)
     data_arry = read_data(file_path)
     m = shape(data_arry)[0]
-    delta = data_arry[1:m]-data_arry[0:m-1]
-    data_mat = mat(delta[delta != 0])
-    m = shape(data_mat)[1]
-    label_mat = mat(dev_num * ones(m))
-    return data_mat.transpose(), label_mat
+    delta = mat(list(set(data_arry[1:m]-data_arry[0:m-1]))).T
+    data_mat = array(delta)
+    m = shape(data_mat)[0]
+    label_mat = array(mat(dev_num * ones(m)))[0]
+    return data_mat, label_mat
 
-def test_digits():
+def test_digits(house_num, dev_num):
     '''
     test the accuracy of classify based on svm
             90% to train svm, 10% to test
             Todo : change rate 10%-10% -----> 90%-90% ---ok
     :return: the test error rate
     '''
-    from numpy import ravel, vstack, hstack, array
+    from numpy import vstack, hstack
     from sklearn.svm import SVC
     from sklearn.externals import joblib
-    dev_numders = 20    # the number of devices
-    # train_rate = 0.01
     # TODO: train_rate should be    ----ok
     train_rate = 0.9 #  rate to train
     data, label = load_dev_data(1, 3)
     lenth = shape(data)[0]
-    train_data = data[0:int(lenth * train_rate)]
-    train_label = label[:, 0:int(lenth * train_rate)]
-    # follw two lines just test for quickly
-    # test_data = data[int(lenth * train_rate): int(2 * lenth * train_rate)]
-    # test_label = label[:, int(lenth * train_rate): int(2 * lenth * train_rate)]
+    train_length = int(lenth * train_rate)
+    train_data = data[0:train_length]
+    train_label = label[0:train_length]
     # TODO: the test data should be  ----ok
-    test_data = data[int(lenth*train_rate):lenth]
-    test_label = label[:, int(lenth*train_rate):lenth]
+    test_data = data[train_length:lenth]
+    test_label = label[train_length:lenth]
     #for i in range(8, 10): # test channel 9, 10
     # TODO: for should be   ----ok
-    for i in range(3, dev_numders):  # train svm with the train_rata of data
-        data, label = load_dev_data(1, i+1)  # tips： i start  at 0 so +1
+    for i in range(3, dev_num):  # train svm with the train_rata of data
+        data, label = load_dev_data(house_num, i+1)  # tips： i start  at 0 so +1
         lenth = shape(data)[0]
         train_data = vstack((train_data, data[0: int(lenth*train_rate)]))
-        train_label = hstack((train_label[0], label[:, 0: int(lenth*train_rate)]))
-        # follw two lines just test for quickly
-        # test_data = vstack((test_data, \
-        #                     data[int(lenth*train_rate): int(2*lenth*train_rate)]))
-        # test_label = hstack((test_label, \
-        #                     label[:, int(lenth * train_rate): int(2*lenth*train_rate)]))
-        # TODO: the test data should be ----ok
-        test_data = vstack((test_data, data[int(lenth*train_rate): lenth]))
-        test_label = hstack((test_label, label[:, int(lenth*train_rate): lenth]))
+        train_label = hstack((train_label, label[0: int(lenth*train_rate)]))
+        test_data = vstack((test_data, \
+                            data[int(lenth*train_rate): int(2*lenth*train_rate)]))
+        test_label = hstack((test_label, \
+                            label[int(lenth * train_rate): int(2*lenth*train_rate)]))
     clf = SVC()
-    clf.fit(train_data, ravel(train_label))  # train svm
-    # TODO: save the train_model
-    joblib.dump(clf, 'train_model_no_MINI.pkl')
+    clf.fit(train_data, train_label)  # train svm
+    # save the train_model
+    file_path = "house_%d/train_model.pkl" % house_num
+    joblib.dump(clf, file_path)
     # test
     error_count = 0
     for i in range(shape(test_data)[0]):
-        if abs(clf.predict(test_data[i])[0] - array(test_label)[0][i]) < 0.00001:
+        if abs(clf.predict([test_data[i]])[0] - test_label[i]) < 0.00001:
             error_count+=1
     print("the training error rate is: %f" % (float(error_count)/float(lenth)))
