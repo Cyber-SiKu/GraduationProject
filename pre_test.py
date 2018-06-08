@@ -6,6 +6,7 @@ TODO:   2.  test the accuracy of classify based on svm \
 '''
 from numpy import mat, shape
 
+
 def read_data(file_name):
     '''
     read 2st data from filename
@@ -42,11 +43,12 @@ def load_dev_data(house_num=1, dev_num=9):
     file_path = "house_%d/channel_%d.dat" % (house_num, dev_num)
     data_arry = read_data(file_path)
     m = shape(data_arry)[0]
-    delta = mat(list(set(data_arry[1:m]-data_arry[0:m-1]))).T
+    delta = mat(list(set(data_arry[1:m] - data_arry[0:m - 1]))).T
     data_mat = array(delta)
     m = shape(data_mat)[0]
     label_mat = array(mat(dev_num * ones(m)))[0]
     return data_mat, label_mat
+
 
 def test_digits(house_num, dev_num):
     '''
@@ -55,11 +57,11 @@ def test_digits(house_num, dev_num):
             Todo : change rate 10%-10% -----> 90%-90% ---ok
     :return: the test error rate
     '''
-    from numpy import vstack, hstack
+    from numpy import vstack, hstack, zeros
     from sklearn.svm import SVC
     from sklearn.externals import joblib
     # TODO: train_rate should be    ----ok
-    train_rate = 0.9 #  rate to train
+    train_rate = 0.9  # rate to train
     data, label = load_dev_data(1, 3)
     lenth = shape(data)[0]
     train_length = int(lenth * train_rate)
@@ -68,17 +70,19 @@ def test_digits(house_num, dev_num):
     # TODO: the test data should be  ----ok
     test_data = data[train_length:lenth]
     test_label = label[train_length:lenth]
-    #for i in range(8, 10): # test channel 9, 10
+    # for i in range(8, 10): # test channel 9, 10
+    devs_num = zeros(dev_num)
     # TODO: for should be   ----ok
-    for i in range(3, dev_num):  # train svm with the train_rata of data
-        data, label = load_dev_data(house_num, i+1)  # tips： i start  at 0 so +1
+    for i in range(2, dev_num):  # train svm with the train_rata of data
+        data, label = load_dev_data(house_num, i + 1)  # tips： i start  at 0 so +1
         lenth = shape(data)[0]
-        train_data = vstack((train_data, data[0: int(lenth*train_rate)]))
-        train_label = hstack((train_label, label[0: int(lenth*train_rate)]))
+        devs_num[i] = lenth
+        train_data = vstack((train_data, data[0: int(lenth * train_rate)]))
+        train_label = hstack((train_label, label[0: int(lenth * train_rate)]))
         test_data = vstack((test_data, \
-                            data[int(lenth*train_rate): int(2*lenth*train_rate)]))
+                            data[int(lenth * train_rate): int(2 * lenth * train_rate)]))
         test_label = hstack((test_label, \
-                            label[int(lenth * train_rate): int(2*lenth*train_rate)]))
+                             label[int(lenth * train_rate): int(2 * lenth * train_rate)]))
     clf = SVC()
     clf.fit(train_data, train_label)  # train svm
     # save the train_model
@@ -86,7 +90,12 @@ def test_digits(house_num, dev_num):
     joblib.dump(clf, file_path)
     # test
     error_count = 0
+    dev_error_count = zeros((dev_num))
     for i in range(shape(test_data)[0]):
         if abs(clf.predict([test_data[i]])[0] - test_label[i]) < 0.00001:
-            error_count+=1
-    print("the training error rate is: %f" % (float(error_count)/float(lenth)))
+            error_count += 1
+            dev_error_count[int(test_label[i]) - 1] += 1
+    print("the training error rate is: %f" % (float(error_count) / float(lenth)))
+    for i in range(2, dev_num):
+        print("the %2dth devices's wrong number is %1d, %3d in all, rate is %0.2f%%" %
+              (i + 1, dev_error_count[i], devs_num[i], dev_error_count[i] / devs_num[i]))
